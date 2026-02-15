@@ -1,0 +1,38 @@
+name: Build Klipper Firmware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi make python3
+
+      - name: Clone Klipper
+        run: |
+          git clone --depth 1 https://github.com/Klipper3d/klipper.git
+
+      - name: Build
+        run: |
+          cp configs/ender3_422_gd32.config klipper/.config
+          cd klipper
+          make clean
+          make
+
+      - name: Collect
+        run: |
+          mkdir -p out
+          cp klipper/out/klipper.bin out/klipper-ender3-4_2_2-gd32.bin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: klipper-firmware
+          path: out/*.bin
